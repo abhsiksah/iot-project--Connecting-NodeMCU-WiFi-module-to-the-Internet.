@@ -1,0 +1,115 @@
+#include <ESP8266WiFi.h>
+#define LED_1 D2  // LED_1 at GPIO4 D2
+#define LED_2 D3  // LED_2 at GPIO4 D3
+
+ 
+const char* ssid = "user_name";
+const char* password = "123b12jk3hj12k3jk123b";
+unsigned char status_LED_1=0;
+unsigned char status_LED_2=0;
+
+WiFiServer server(80);
+ 
+void setup() {          // inside the setup
+  Serial.begin(115200); // it is important to select the bit transfer rate
+  pinMode(LED_1, OUTPUT);  //  since you use the led for getting the o/p so we set it to o/p if it was some sensore we would have set it to i/p
+  digitalWrite(LED_1, LOW);
+  
+  pinMode(LED_2, OUTPUT);
+  digitalWrite(LED_2, LOW);
+ 
+                   // Connect to WiFi network
+  Serial.println();
+  Serial.println();
+  Serial.print("Connecting to ");
+  Serial.println(ssid);
+ 
+  WiFi.begin(ssid, password);
+ 
+  while (WiFi.status() != WL_CONNECTED) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+ 
+                                         // Start the server
+  server.begin();
+  Serial.println("Server started at...");
+  Serial.println(WiFi.localIP());
+ 
+}
+ 
+void loop() {
+
+                                              // Check if a client has connected
+  WiFiClient client = server.available();
+  if (!client) {
+    return;
+  }
+ 
+                                           // Wait until the client sends some data
+  Serial.println("new client");
+  while (! client.available())
+  {
+    delay (1);
+  }
+  
+ 
+                                                   // Read the first line of the request
+  String req = client.readStringUntil('\r');
+  Serial.println(req);
+  client.flush();
+ 
+                                           // Match the request
+  
+  if (req.indexOf("/LED_1off") != -1)  
+  {
+    status_LED_1=0;
+    digitalWrite(LED_1, LOW);
+    Serial.println("LED_1 OFF");
+  }
+  else if(req.indexOf("/LED_1on") != -1)
+  {
+    status_LED_1=1;
+    digitalWrite(LED_1,HIGH);
+    Serial.println("LED_1 ON");
+  }
+
+  else if (req.indexOf("/LED_2off") != -1)  
+  {
+    status_LED_2=0;
+    digitalWrite(LED_2, LOW);
+    Serial.println("LED_2 OFF");
+  }
+  else if(req.indexOf("/LED_2on") != -1)
+  {
+    status_LED_2=1;
+    digitalWrite(LED_2,HIGH);
+    Serial.println("LED_2 ON");
+  }
+ 
+// Return the response
+client.println("HTTP/1.1 200 OK");
+client.println("Content-Type: text/html");
+client.println("Connection: close");
+client.println(""); 
+
+client.println("<!DOCTYPE HTML>");
+client.println("<HTML>");
+client.println("<H1> LED_1 CONTROL </H1>");
+client.println("<br />");
+ 
+ client.println("<a href=\"/LED_1on\"\"> <button style='FONT-SIZE: 50px; HEIGHT: 200px;WIDTH: 300px; 126px; Z-INDEX: 0; TOP: 200px;'> LED_1 ON </button> </a>");
+ client.println("<a href=\"/LED_1off\"\"> <button style='FONT-SIZE: 50px; HEIGHT: 200px; WIDTH: 300px; 126px; Z-INDEX: 0; TOP: 200px;'> LED_1 OFF </button> </a> </br>");
+
+ client.println("<a href=\"/LED_2on\"\"> <button style='FONT-SIZE: 50px; HEIGHT: 200px;WIDTH: 300px; 126px; Z-INDEX: 0; TOP: 200px;'> LED_2 ON </button> </a>");
+ client.println("<a href=\"/LED_2off\"\"> <button style='FONT-SIZE: 50px; HEIGHT: 200px; WIDTH: 300px; 126px; Z-INDEX: 0; TOP: 200px;'> LED_2 OFF </button> </a>");
+ 
+ client.println("</html>");
+ 
+  delay(1);
+  Serial.println("Client disonnected");
+  Serial.println("");
+ 
+}
